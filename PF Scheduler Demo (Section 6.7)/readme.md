@@ -1,5 +1,6 @@
-Demos of Section 6.7 of Fundamentals of Wireless Communication (David Tse).
-This Demo file consists of the following parts. Have fun!
+# Demos of Section 6.7 of Fundamentals of Wireless Communication (David Tse).
+## This Demo file consists of the following parts. Have fun!
+
 *Author: Seongwook Jung*
 
 ### Part 1. Comparison of Various Schedulers in Asymmetric Environment
