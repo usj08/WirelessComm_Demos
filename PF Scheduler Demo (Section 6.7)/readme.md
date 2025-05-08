@@ -3,7 +3,7 @@
 
 *Author: Seongwook Jung*
 
-Last Revised on 2025/05/08.
+*Last Revised on 2025/05/08.*
 
 ### Part 1. Comparison of Various Schedulers in Asymmetric Environment
 - This part compares basic schedulers; (i) Round-Robin, (ii) Max-Rate Only, (iii) Proportional-Fair Scheduler
@@ -12,7 +12,14 @@ Last Revised on 2025/05/08.
 - This part simulates PF scheduler and observes the user-selecting behavior.
 
 ### Part 3. Multiuser Diversity on Various Mobility Scenarios
-- EOM.
+- For fixed(Rician) and from low-mobility (3km/h Clarke's Model, Correlated Rayleigh) to high-mobility (70km/h Rayleigh), we delve into exploitness of multiuser diversity for each channel scenario.
 
 ### Part 4. Opportunistic Beamforming on Slow Fading Channel
-- Let's analyze the performance of opportunistic beamforming and discuss/compare with the tx beamforming (coherent beamforming) techniques. 
+- From Part 3, we have come to know dynamic range of the channel (big fluctuation) induces multiuser diversity for static environment.
+- Thus let we analyze the performance of opportunistic beamforming and discuss/compare with the tx beamforming (coherent beamforming) techniques in *Slow* Fading Channel.
+
+### Part 5. Opportunistic Beamforming on Fast Fading Channel
+- The natural question that arises is that does opportunistic scheme is useless when it comes to **Fast** Fading channel?
+- Generally yes, but if for specific scenarios such that the dynamicity can be added although the channel is already fast-fading, it impinges upon the channel via adding additional fluctuation. Take a look at this.
+
+I welcome any kind of suggestion or revision requests.
