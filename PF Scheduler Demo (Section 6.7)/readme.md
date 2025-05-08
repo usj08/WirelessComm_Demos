@@ -1,9 +1,10 @@
 # Demos of Section 6.7. Multiuser Diversity: System Aspect. 
-## Book: Fundamentals of Wireless Communication (David Tse).
+
 
 ## This Demo file consists of the following parts. Have fun!
 
 *Author: Seongwook Jung*
+*Referred Book: Fundamentals of Wireless Communication (David Tse).*
 
 *Last Revised on 2025/05/08.*
 
