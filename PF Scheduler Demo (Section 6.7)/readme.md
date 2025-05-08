@@ -1,5 +1,4 @@
 # Demos of Section 6.7. Multiuser Diversity: System Aspect. 
-
 ## This Demo file consists of the following parts. Have fun!
 
 *Author: Seongwook Jung*
