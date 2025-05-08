@@ -8,9 +8,9 @@ nt       = 2;                          % Tx antennas (Smaller -> closer performa
 gamma    = 10^(0/10);                  % 0 dB SNR
 slot_len = 1.67e-3;
 t_c      = 1.7;                        % PF adaptation time constant
-Nslots   = 2e4;                        % Number of time slots (channel is coherent on Nslots)
+Nslots   = 1e4;                        % Number of time slots (channel is coherent on Nslots)
 alpha_pf = slot_len / t_c;
-num_iter = 20;
+num_iter = 10;
 
 % Preallocate accumulators
 SE_obf = zeros(size(K_list));
