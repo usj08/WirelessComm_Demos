@@ -7,5 +7,5 @@
 - More will be added.
 
 #### Reproduce Papers
-- OMP and its variant (EDITING)
+- OMP and its variant (SWOMP)
 - More will be added.
