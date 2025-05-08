@@ -4,6 +4,7 @@
 ## This Demo file consists of the following parts. Have fun!
 
 *Author: Seongwook Jung*
+
 *Referred Book: Fundamentals of Wireless Communication (David Tse).*
 
 *Last Revised on 2025/05/08.*
