@@ -1,4 +1,6 @@
-# Demos of Section 6.7 of Fundamentals of Wireless Communication (David Tse).
+# Demos of Section 6.7. Multiuser Diversity: System Aspect. 
+## Book: Fundamentals of Wireless Communication (David Tse).
+
 ## This Demo file consists of the following parts. Have fun!
 
 *Author: Seongwook Jung*
@@ -6,10 +8,11 @@
 *Last Revised on 2025/05/08.*
 
 ### Part 1. Comparison of Various Schedulers in Asymmetric Environment
-- This part compares basic schedulers; (i) Round-Robin, (ii) Max-Rate Only, (iii) Proportional-Fair Scheduler
+- This part compares basic schedulers; **(i) Round-Robin, (ii) Max-Rate Only, (iii) Proportional-Fair Scheduler**.
 
 ### Part 2. Proportional Fair Scheduler
 - This part simulates PF scheduler and observes the user-selecting behavior.
+- For one's taste, please tailor minor parameters such as latency time scale $t_c$ (`LPF`) and `plot range`.
 
 ### Part 3. Multiuser Diversity on Various Mobility Scenarios
 - For fixed(Rician) and from low-mobility (3km/h Clarke's Model, Correlated Rayleigh) to high-mobility (70km/h Rayleigh), we delve into exploitness of multiuser diversity for each channel scenario.
