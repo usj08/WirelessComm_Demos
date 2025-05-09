@@ -24,10 +24,10 @@
 
 ### Part 4. Opportunistic Beamforming on Slow Fading Channel
 - From Part 3, we have come to know dynamic range of the channel (big fluctuation) induces multiuser diversity for static environment.
-- Thus let we analyze the performance of opportunistic beamforming and discuss/compare with the tx beamforming (coherent beamforming) techniques in *Slow* Fading Channel.
+- Thus let we analyze the performance of opportunistic beamforming and discuss/compare with the tx beamforming (coherent beamforming) techniques in **Slow** Fading Channel.
 
 ### Part 5. Opportunistic Beamforming on Fast Fading Channel
-- The natural question that arises is that does opportunistic scheme is useless when it comes to **Fast** Fading channel?
+- The natural question that arises is that is opportunistic scheme useless when it comes to **Fast** Fading channel?
 - Generally yes, but if for specific scenarios such that the dynamicity can be added although the channel is already fast-fading, it impinges upon the channel via adding additional fluctuation. Take a look at this.
 
 I welcome any kind of suggestion or revision requests.
