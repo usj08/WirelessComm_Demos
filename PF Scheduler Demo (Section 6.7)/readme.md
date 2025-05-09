@@ -18,7 +18,7 @@
 ### Part 3. Multiuser Diversity on Various Mobility Scenarios
 - For fixed(Rician) and from low-mobility (3km/h Jake's Model, Rayleigh) to high-mobility (70km/h Jake's Model, Rayleigh), we delve into exploitness of multiuser diversity for each channel scenario.
 - Jake's approximate version of Clarke's model for implementation is given as $$h(t) \approx \frac{1}{\sqrt{M}} \sum_{l=1}^{M} \exp(j f_D \cos (\alpha_l) t + \phi_l)$$
-  - Autocorrelation $R(\tau)$: $$R(\tau) = $$
+  - Autocorrelation $R(\tau)$: $$R(\tau) = \frac{1}{M} \sum_{l=1}^{M} \exp(j f_D \cos (\alpha_l) \tau) \longrightarrow J_0 (2 \pi f_D \tau)$$
   - For more detailed information about Jake's model representation of rayleigh that includes doppler effect, see https://en.wikipedia.org/wiki/Rayleigh_fading.
 
 ### Part 4. Opportunistic Beamforming on Slow Fading Channel
