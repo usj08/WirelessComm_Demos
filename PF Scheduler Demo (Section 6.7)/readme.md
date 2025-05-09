@@ -4,7 +4,7 @@
 *Author: Seongwook Jung*
 
 - Referred Book: Fundamentals of Wireless Communication (David Tse).
-- Last Revised on 2025/05/08.
+- Last Revised on 2025/05/09.
 - If you want to see demos of entire parts altogether, execute `Proportional_fair_scheduler_Demo.m`.
 
 
