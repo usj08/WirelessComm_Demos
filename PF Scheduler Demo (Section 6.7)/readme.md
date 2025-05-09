@@ -16,7 +16,10 @@
 - For one's taste, please tailor minor parameters such as latency time scale $t_c$ (`LPF`) and `plot range`.
 
 ### Part 3. Multiuser Diversity on Various Mobility Scenarios
-- For fixed(Rician) and from low-mobility (3km/h Clarke's Model, Correlated Rayleigh) to high-mobility (70km/h Rayleigh), we delve into exploitness of multiuser diversity for each channel scenario.
+- For fixed(Rician) and from low-mobility (3km/h Jake's Model, Rayleigh) to high-mobility (70km/h Jake's Model, Rayleigh), we delve into exploitness of multiuser diversity for each channel scenario.
+- Jake's approximate version of Clarke's model for implementation is given as $$h(t) \approx \frac{1}{\sqrt{M}} \sum_{l=1}^{M} \exp(j f_D \cos (\alpha_l) t + \phi_l)$$
+  - Autocorrelation $R(\tau)$: $$R(\tau) = $$
+  - For more detailed information about Jake's model representation of rayleigh that includes doppler effect, see https://en.wikipedia.org/wiki/Rayleigh_fading.
 
 ### Part 4. Opportunistic Beamforming on Slow Fading Channel
 - From Part 3, we have come to know dynamic range of the channel (big fluctuation) induces multiuser diversity for static environment.
