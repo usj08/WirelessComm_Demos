@@ -85,13 +85,14 @@ for iter = 1:num_iter
     TP(4,idx) = TP(4,idx) + sumR4 / Nslots;
 
     % Scenario 5 (EXTRA): Fast Rician, N_t=4, PF with dumb‐antenna BF and LOS each slot
+    Nt = 4;
     T5 = ones(K,1); sumR5 = 0;
     for n = 1:Nslots
-      LOS = exp(1j*2*pi*rand(4,K));
+      LOS = exp(1j*2*pi*rand(Nt,K));
       H   = sqrt(kappa/(kappa+1))*LOS ...
-          + (randn(4,K) + 1j*randn(4,K)) / sqrt(2*(kappa+1));
-      alpha_vec = rand(4,1);
-      theta_vec = 2*pi * rand(4,1);
+          + (randn(Nt,K) + 1j*randn(Nt,K)) / sqrt(2*(kappa+1));
+      alpha_vec = rand(Nt,1);
+      theta_vec = 2*pi * rand(Nt,1);
       q = sqrt(alpha_vec) .* exp(1j*theta_vec);
       q = q / norm(q);
 
@@ -116,7 +117,7 @@ labels = {
   'Rayleigh, Nt=2, PF+Opp. BF', ...
   'Ricean,   Nt=1, PF', ...
   'Ricean,   Nt=2, PF+Opp. BF', ...
-  'Ricean,   Nt=4, PF+Opp. BF'
+  ['Ricean,   Nt=',num2str(Nt),', PF+Opp. BF']
 };
 
 for s = 1:5

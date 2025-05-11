@@ -87,6 +87,7 @@ set(gca,'FontSize',13,'XTick',K_list);
 Nslots_small = 50;
 Htest = H_full(:, 1:2);
 gains = zeros(Nslots, 2);
+
 for n = 1:Nslots
     q = randn(nt, 1) + 1j * randn(nt, 1);
     q = q / norm(q);
@@ -99,7 +100,7 @@ figure;
 subplot(2,1,1);
 plot(1:Nslots_small, sqrt(gains(1:Nslots_small, 1)), '-o', 'LineWidth',1.5,'Color', 'r', 'DisplayName','User 1 (After Opp. BF)');
 hold on;
-plot(1:Nslots_small, repmat(abs(Htest(1, 1)), 1, Nslots_small), '--', 'Color', 'r', 'LineWidth',1,'DisplayName','User 1 (Before Opp. BF)');
+plot(1:Nslots_small, repmat(sqrt(sum(abs(Htest(:, 1)).^2)), 1, Nslots_small), '--', 'Color', 'r', 'LineWidth',1,'DisplayName','User 1 (Before Opp. BF)');
 xlabel('Time slots', 'Interpreter','latex');
 ylabel('Channel Strength', 'Interpreter','latex');
 title('\textbf{Channel Strength after Opportunistic Beamforming}','Interpreter','latex', 'FontSize',14);
@@ -109,7 +110,7 @@ grid on;
 subplot(2,1,2);
 plot(1:Nslots_small, sqrt(gains(1:Nslots_small, 2)), '->', 'LineWidth',1.5, 'Color', 'b', 'DisplayName','User 2 (After Opp. BF)');
 hold on;
-plot(1:Nslots_small, repmat(abs(Htest(1, 2)), 1, Nslots_small), '--', 'Color', 'b','LineWidth',1,'DisplayName','User 2 (Before Opp. BF)');
+plot(1:Nslots_small, repmat(sqrt(sum(abs(Htest(:, 2)).^2)), 1, Nslots_small), '--', 'Color', 'b','LineWidth',1,'DisplayName','User 2 (Before Opp. BF)');
 xlabel('Time slots', 'Interpreter','latex');
 ylabel('Channel Strength', 'Interpreter','latex');
 title('\textbf{Channel Strength after Opportunistic Beamforming}','Interpreter','latex', 'FontSize',14);

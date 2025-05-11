@@ -9,7 +9,7 @@ slot_len    = 1.67e-3;           % slot duration [s]
 SNR_dB      = 0;
 gamma       = 10^(SNR_dB/10);
 B           = 1.25e6;            % 1.25 MHz
-M           = 8;                % Sum‐of‐Sinusoids path count
+M           = 64;                % Sum‐of‐Sinusoids path count
 
 Nslots      = 2e5;
 K_list      = [1 2:2:16];        % sweep user count
