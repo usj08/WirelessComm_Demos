@@ -8,18 +8,17 @@ clear;
 NtRF = 4;
 NrRF = 4; % Ns < NtRF << Nt. Ns < NtRF << Nt
 Ns = 2; 
-Nr = 64; 
-Nt = 256;
-
+Nt = 64;
+Nr = 16; 
 Ncl = 8;
 Nray = 10;
-% If Ncl*Nray << min(Nr, Nt), i.e. poor scattering, 
-% better to use single RF-Only beam-steering.
-k = 2*pi/0.1; % 2pi/lambda. typically lambda = 3*10^8 / N*10^9 ~~ 0.3N
+
+% If Ncl*Nray << min(Nr, Nt), becomes very accurate (Why?)
+k = 2*pi/0.01; % 2pi/lambda. typically lambda = 3*10^8 / N*10^9 ~~ 0.3/N
 d = 0.05; % inter-element spacing. typically lambda/2
 
-%% A. Rx SIDE 
-%% 1. Array response vectors (UPA) and Channel Formulation
+% A. Rx SIDE 
+% 1. Array response vectors (UPA) and Channel Formulation
 
 % Channel Instantiation (p.1501)
 % ::::::1. Cluster Gain (alpha)::::::
@@ -28,26 +27,55 @@ d = 0.05; % inter-element spacing. typically lambda/2
 gamma = Nt*Nr;
 clusterGain = (randn([Ncl, Nray]) + 1j * randn([Ncl, Nray])) * sqrt(gamma / (2*Ncl*Nray));
 
-% :::1-1. Element Gain(Gamma_r, Gamma_t):::
-% Elements gain for Rx/Tx all set to 1 for simplicity. 
-% 1 or 0 according to whether angles belong to the ranged sector
-RxElementGain = 1; TxElementGain = 1; 
-phi_cl = 2*pi*rand([Ncl, 1]); theta_cl = 2*pi*rand([Ncl, 1]);
-
-% ::::::1-2. AoA, AoD sampling for channel::::::
+% ::::::2. AoA, AoD sampling for channel::::::
 % for simplicity, alpha is set to meet equal average cluster power
 % sigma_i^2 = gamma / NclNray. Summing all power gains equal to NtNr.
-% AoA, AoD ~ Laplacian with mean (phi_cl, theta_cl) and std. (phi_spread,
-% theta_spread).
+% angles ~ Laplacian, mu(phi_cl,theta_cl) and std(phi_spread,theta_spread).
 % Laplacian: f(x|mu, b) = 1/2b exp(-|x-mu|/b) with mean=mu, std=\sqrt{2}b
+phi_cl_rx = 2*pi*rand([Ncl, 1]); theta_cl_rx = 2*pi*rand([Ncl, 1]);
+phi_cl_tx = 2*pi*rand([Ncl, 1]); theta_cl_tx = 2*pi*rand([Ncl, 1]);
+phi_rx = zeros([Ncl, Nray]); theta_rx = zeros([Ncl, Nray]); 
+phi_tx = zeros([Ncl, Nray]); theta_tx = zeros([Ncl, Nray]); 
 
-phi = zeros([Ncl, Nray]); theta = zeros([Ncl, Nray]); % initialization
-phi_spread = 15 * pi / 180; theta_spread = 15 * pi / 180;
+% We assume spread is same both in rx and tx for simplicity (but revisable)
+phi_spread = 7.5/180 * pi; theta_spread = 7.5/180 * pi;
+
 for i = 1:Ncl
-    phi(i, :) = laplacian_sample(phi_cl(i), phi_spread/sqrt(2), Nray);
-    theta(i, :) = laplacian_sample(theta_cl(i), theta_spread/sqrt(2), Nray);
+    phi_rx(i, :) = laplacian_sample(phi_cl_rx(i), phi_spread/sqrt(2), Nray);
+    theta_rx(i, :) = laplacian_sample(theta_cl_rx(i), theta_spread/sqrt(2), Nray);
+
+    phi_tx(i, :) = laplacian_sample(phi_cl_tx(i), phi_spread/sqrt(2), Nray);
+    theta_tx(i, :) = laplacian_sample(theta_cl_tx(i), theta_spread/sqrt(2), Nray);
 end 
 
+% ::::::3. Element Gain(Gamma_r, Gamma_t)::::::
+% Elements gain for Rx/Tx are 0 or 1 according to whether angles belong to 
+% the ranged sector. A sector angle range is simplified to be
+% omni-directional (So set all Gains to 1; see p.1509 in paper)
+RxElemGain = ones(Ncl, Nray); TxElemGain = ones(Ncl, Nray); 
+
+% ((UNCOMMENT THESE LINES TO DEFINE SECTOR RANGE FOR ELEMENT GAIN.))
+% phi_min = -pi; phi_max = pi; theta_min = -pi; theta_max = pi;
+% 
+% % Wrap angles to bound in [-pi, pi] using modular for convenience in 
+% % computing Element Gains.
+% phi_rx  = mod(phi_rx + pi, 2*pi) - pi; 
+% theta_rx  = mod(theta_rx + pi, 2*pi) - pi;
+% phi_tx  = mod(phi_tx + pi, 2*pi) - pi;
+% theta_tx  = mod(theta_tx + pi, 2*pi) - pi;
+% for i = 1:Ncl
+%     for l = 1:Nray
+%         if (phi_rx(i, l) > phi_min) && (phi_rx(i, l) < phi_max)
+%             RxElemGain(i, l) = 1;
+%         end
+%         if (phi_tx(i, l) > phi_min) && (phi_tx(i, l) < phi_max)
+%             TxElemGain(i, l) = 1;
+%         end
+%     end
+% end
+
+% ::::::4. Generate Channel according to Clustered Channel Model::::::
+% Be ware of normalizations.
 ch = zeros([Nr, Nt]);
 At = zeros([Nt, Ncl*Nray]);
 Ar = zeros([Nr, Ncl*Nray]);
@@ -57,9 +85,9 @@ Wr = sqrt(Nr); Hr = sqrt(Nr);
 
 for i = 1:Ncl
     for l = 1:Nray
-        ar = UPA(Wr, Hr, k, d, phi(i, l), theta(i, l));
-        at = UPA(Wt, Ht, k, d, phi(i, l), theta(i, l));
-        ch = ch + clusterGain(i, l) * ar * at';
+        ar = UPA(Wr, Hr, k, d, phi_rx(i, l), theta_rx(i, l));
+        at = UPA(Wt, Ht, k, d, phi_tx(i, l), theta_tx(i, l));
+        ch = ch + clusterGain(i, l) * RxElemGain(i, l) * TxElemGain(i, l) * ar * at';
         At(:,(Nray)*(i-1)+l) = at; 
         Ar(:,(Nray)*(i-1)+l) = ar;
     end
@@ -70,37 +98,33 @@ disp(['E[|H|^2] = ', num2str(sum(abs(ch).^2, "all"))]);
 disp(['Nt*Nr    = ', num2str(Nt*Nr)]);
 
 
-%% 2. Orthogonal Matching Pursuit
+% 2. Orthogonal Matching Pursuit
 [U, S, V] = svd(ch);
 Fopt = V(:, 1:Ns);
-FRF = zeros(Nt, 1);
+FRF = zeros(Nt, NtRF);
 FBB = zeros(NtRF, Ns);
 Fres = Fopt;
 
 for i=1:NtRF
     proj = At' * Fres;
     [m, k] = max(diag(proj * proj'));
-    if (i==1)
-        FRF = At(:, k);
-    else
-        FRF = [FRF, At(:, k)];
-    end
-    FBB = inv(FRF' * FRF) * FRF' * Fopt;
-    Fres = (Fopt - FRF * FBB) / norm(Fopt - FRF * FBB, "fro");
+    FRF(:, i) = At(:, k);
+    FBB = pinv(FRF(:, 1:i)) * Fopt;
+    Fres = (Fopt - FRF(:, 1:i) * FBB) / norm(Fopt - FRF(:, 1:i) * FBB, "fro");
 end
 FBB = sqrt(Ns) * FBB / norm(FRF * FBB, "fro");
 F_design = FRF * FBB;
 
-%figure;
-%surf(abs(F_design));
-%title("Hybrid Precoder from Orthogonal Matching Pursuit");
+% figure;
+% surf(abs(F_design));
+% title("Hybrid Precoder from Orthogonal Matching Pursuit");
+% 
+% figure;
+% surf(abs(Fopt));
+% title("Hybrid Precoder from Optimal Unconstrained solving");
 
-%figure;
-%surf(abs(Fopt));
-%title("Hybrid Precoder from Optimal Unconstrained solving");
-
-%% B. Rx Side & Signal Recovery
-%% 1. 
+% B. Rx Side & Signal Recovery
+% 1. 
 Ndata = 20;
 s = (randi(2, [Ns, Ndata])-1) / sqrt(Ns/2); % Note that E[ss']=1/Ns. assumed binary bit stream 1 or 0.
 
@@ -137,6 +161,8 @@ Nscale = 50; % only for plotting
 s_plot = zeros(Ns, Ndata*Nscale);
 s_recover_plot = zeros(Ns, Ndata*Nscale);
 
+
+% Sanity check 
 for i = 1:Ns
     s_plot(i,:) = repelem(s(i,:), Nscale) * sqrt(Ns/2); % energy normalized
     s_recover_plot(i,:) = repelem(s_recover(i,:), Nscale) * sqrt(Ns/2);
@@ -148,13 +174,13 @@ for i = 1:Ns
     plot(1:Ndata*Nscale, s_plot(i,:), "Color", "green");
     title(["Datastream ", num2str(i)]);
 end
-
-figure;
-for i = 1:Ns
-    subplot(Ns, 1, i);
-    plot(1:Ndata*Nscale, s_recover_plot(i,:), "Color", "blue");
-    title(["Recovered Signal (Before Threshold Detector)", num2str(i)]);
-end
+% 
+% figure;
+% for i = 1:Ns
+%     subplot(Ns, 1, i);
+%     plot(1:Ndata*Nscale, s_recover_plot(i,:), "Color", "blue");
+%     title(["Recovered Signal (Before Threshold Detector)", num2str(i)]);
+% end
 
 figure;
 for i = 1:Ns
@@ -163,7 +189,7 @@ for i = 1:Ns
     title(["Recovered Signal (After Threshold Detector)", num2str(i)]);
 end
 
-%% 2. Spectral Efficiency
+% 2. Spectral Efficiency
 SNR = 10 .^ (-4:0.5:0); % rho / (Ns * noise_var) % dB
 SNRdB = 10 * log(SNR) * 1/log(10);
 Rres = zeros(length(SNR), 1);
@@ -178,6 +204,7 @@ for snr=SNR
     i = i + 1;
 end
 
+figure;
 plot(SNRdB, Rres, "Color", "Blue", "LineWidth", 1.2, "Marker", "o");
 
 hold on;
