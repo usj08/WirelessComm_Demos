@@ -7,5 +7,6 @@
 - More will be added.
 
 #### Reproduce Papers
+- Spatially Sparse Precoding in mmWave Channels
 - OMP and its variant (SWOMP)
 - More will be added.
