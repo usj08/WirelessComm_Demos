@@ -10,5 +10,6 @@
 
 #### Reproduce Papers
 - Spatially Sparse Precoding in mmWave Channels
+- **MUSIC Algorithm** (2025.06)
 - OMP and its variant (SWOMP)
 - More will be added.
