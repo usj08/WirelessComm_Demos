@@ -15,20 +15,24 @@ lambda = 0.01;
 k = 2*pi/lambda; % 2pi/lambda. typically lambda = 3*10^8 / N*10^9 ~~ 0.3/N
 d = lambda/2; % inter-element spacing. typically lambda/2
 
-Nray = 6; 
-Nr = 16;
+Nray = 5; 
+Nr = 32;
 Nsample = 256;
+AoA_min = 0;
+AoA_max = pi;
 
-AoAs = pi * rand(Nray, 1) - pi/2; % range: -pi/2, pi/2
+AoAs =  (AoA_max-AoA_min) * rand(Nray, 1) + AoA_min; % [AoA_min, AoA_max]
 A = zeros(Nr, Nray);
 for i = 1:Nray
     A(:, i) = ULA(Nr, k, d, AoAs(i));
 end 
-rank(A) 
 
 % My own signal. Complex number is also possible. 
 % F should be size of (Nrays, Nsamples)
-F = diag([1 10 5 1 1 1]) * randn(Nray, Nsample); 
+powers = randi(5 * Nray, [Nray, 1]);
+F = diag(powers) * randn(Nray, Nsample); 
+
+powers
 
 sigma = 1e-2;
 W = sigma * 1/sqrt(2) * (randn(Nr, Nsample) + 1j * randn(Nr, Nsample));
@@ -62,8 +66,8 @@ eigvecs = eigvecs(:, idx);
 eigval_min = min(eigvals);
 
 Ntheta = 256;
-theta_interval = pi/Ntheta;
-theta_cont = linspace(-pi/2, pi/2, Ntheta);
+dtheta = (AoA_max - AoA_min) / Ntheta;
+theta_cont = linspace(AoA_min, AoA_max - dtheta, Ntheta);
 theta_display = theta_cont * 180 / pi;
 array_cont = zeros(Nr, Ntheta);
 
@@ -73,12 +77,38 @@ end
 
 % 2-1. Estimate D = M - N
 % a problem to think: how to distinguish N? anyways...
-% This time, heuristic.
-D = sum(eigvals > eigval_min * 20);
+% Exploit the statistics of W. (We already assumed we know S0)
+
+% [idx, C] = kmeans(log(eigvals), 2);
+% [~, I] = min(C);
+% sum(idx == I)
+% D = Nr - sum(idx == I, 'all');
+
+% Here I introduce my custom detection technique
+eigvals
+Nnoise = 0;
+anomaly_flag = 0;
+prev = eigvals(end-Nnoise);
+reject_ratio = 2;
+
+while ~anomaly_flag
+    curr = eigvals(end-Nnoise-1);
+    % detect anomaly by computing ratio of adjacent eigenvalues
+    if ((curr / prev) > reject_ratio)
+        anomaly_flag = 1;
+    end
+
+    Nnoise = Nnoise + 1;
+    prev = eigvals(end-Nnoise);
+end
+
+
+eps = 1e-15;
+D = Nr - Nnoise;
+
 sprintf('estimated D = %d', D)
 
-Nnoise = Nr - D;
-noise_eigvecs = eigvecs(:, end-(Nnoise-1):end);
+noise_eigvecs = eigvecs(:, D+1:end);
 
 % 3. Evaluate P(theta)
 spectrum = zeros(Ntheta, 1);
@@ -98,7 +128,7 @@ xlabel('Angle of Arrival (AoA) $\theta^\circ$', 'Interpreter', 'latex', ...
     'FontSize', 13);
 ylabel('$P_{MU}(\theta)$ (dB)', 'Interpreter', 'latex', ...
     'FontSize', 13);
-xlim([-90, 90]);
+xlim([AoA_min * 180 / pi, AoA_max * 180 / pi]);
 ax = gca;
 ax.FontSize = 12;
 
@@ -122,7 +152,7 @@ P_hat % Compare with F.
 function y = ULA(N, k, d, theta)
     y = zeros(N, 1);
     for n=1:N
-        y(n) = 1/sqrt(N) * exp(1j*k*d*((n-1)*sin(theta)));
+        y(n) = 1/sqrt(N) * exp(1j*k*d*((n-1)*cos(theta)));
     end
 end
 
