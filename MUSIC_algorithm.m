@@ -148,49 +148,221 @@ P_hat = real(pinv(A) * (S - eigval_min * S0) * pinv(A)');
 P_hat % Compare with F.
 
 
-%% ESPRIT Reproduction.
-% ULA has multiple invariance to exploit; here, we do such thing with
-% simple (m-1) overlapping of (m-2) antennas linearly.
-Delta = d;
-signal = A * F;
+%% A. Rank Deficiency without Spatial Smoothing
 
-m = Nr-1;
-noise_gen = sigma/sqrt(2) * (randn(m, Nsample) + 1j*randn(m, Nsample));
-xx = signal(1:m, :) + noise_gen; % (m, Nsample)
-yy = signal(2:m+1, :) + noise_gen;
+% only limits to single observation
+X = A * F(:, 1) + W(:, 1);
 
-zz = [xx; yy]; % (2m, Nsample)
-S0 = eye(2*m);
-Szz = 1/Nsample * (zz * zz');
-[eigvecs, eigvals] = eig(Szz, S0);
+% II. Apply MUSIC Algorithm
+
+% 1. Construct S with samples.
+S = zeros(Nr, Nr);
+S0 = eye(Nr); % S0 should be made prior to analyze eigenstructure.
+
+for n = 1:Nsample 
+    S = S + X * X';
+end
+S = S ./ Nsample;
+
+% 2. Calculate eigenstructure of S in metric of S_0.
+% Solve Sv = lambda S0 v by pre- and post-multiplying S_0^{-1/2}.
+% This is actually done by 'eig(A, B)' function, so no need to implement.
+[eigvecs, eigvals] = eig(S, S0, 'chol');
 
 % sort eigvecs and eigvals
 [eigvals, idx] = sort(diag(eigvals), 'descend');
 eigvecs = eigvecs(:, idx);
 eigval_min = min(eigvals);
 
-eigvals' 
+Ntheta = 256;
+dtheta = (AoA_max - AoA_min) / Ntheta;
+theta_cont = linspace(AoA_min, AoA_max - dtheta, Ntheta);
+theta_display = theta_cont * 180 / pi;
+array_cont = zeros(Nr, Ntheta);
 
-D % let's just use the one we used in MUSIC
+for i = 1:Ntheta
+    array_cont(:, i) = ULA(Nr, k, d, theta_cont(i));
+end 
+
+% 2-1. Estimate D = M - N
+% a problem to think: how to distinguish N? anyways...
+% Exploit the statistics of W. (We already assumed we know S0)
+
+% [idx, C] = kmeans(log(eigvals), 2);
+% [~, I] = min(C);
+% sum(idx == I)
+% D = Nr - sum(idx == I, 'all');
+
+% chi-square LR test
+eigvals'
+D = 1;
+eps = 1e-15;
+reject_level = 0.05;
+anomaly_flag = 0;
+
+while ~anomaly_flag
+    % LR ~ \chi^2 (Nsample(M-D))
+    df = Nsample*(Nr-D);
+    LR = Nsample / sigma^2 * sum(eigvals(D+1:end));
+
+    pvalue = chi2cdf(LR, df, 'upper');
+
+    if (pvalue > reject_level)
+        anomaly_flag = 1;
+        break;
+    end 
+    D = D + 1;
+end
 
 
-signal_eigvecs = eigvecs(:, 1:D); % (2m, D)
-eigvecs_x = eigvecs(1:m, 1:D); eigvecs_y = eigvecs(m+1:end, 1:D); % (m, D) each
+sprintf('estimated D = %d', D)
 
-eigvecs_xy = [eigvecs_x eigvecs_y]; % (m, 2D)
+noise_eigvecs = eigvecs(:, D+1:end);
 
-[E, Lambda] = eig(eigvecs_xy' * eigvecs_xy);
+% 3. Evaluate P(theta)
+spectrum_def = zeros(Ntheta, 1);
 
-E12 = E(1:D, D+1:end);
-E22 = E(D+1:end, D+1:end);
+for n = 1:Ntheta
+    vv = noise_eigvecs' * array_cont(:, n);
+    spectrum_def(n) = 1 / (vv' * vv);
+end
 
-Psi = -E12 * inv(E22);
-[~, phi_est] = eig(Psi);
+AoAs_deg = AoAs * 180 / pi;
 
-AoA_est = mod(asin(lambda * angle(phi_est) / (2*pi*Delta)) * 180 / pi, 180);
 
-AoA_est
+figure;
+plot(theta_display, 10*log10(spectrum_def), 'LineWidth', 1.25);
+grid on;
+title('Spectrum against AoA (Spatial Smoothing)', 'Interpreter', 'latex', 'FontSize', 13);
+xlabel('Angle of Arrival (AoA) $\theta^\circ$', 'Interpreter', 'latex', ...
+    'FontSize', 13);
+ylabel('$P_{MU}(\theta)$ (dB)', 'Interpreter', 'latex', ...
+    'FontSize', 13);
+xlim([AoA_min * 180 / pi, AoA_max * 180 / pi]);
+ax = gca;
+ax.FontSize = 12;
 
+hold on;
+for degree = AoAs_deg'
+    xline(degree, '--r', sprintf('%.2f $^{\\circ}$', degree), 'Interpreter', 'latex', ...
+        'Fontsize', 13);
+    hold on;
+end 
+
+%% B. Rank Augmentation via Spatial Smoothing
+
+% II. Apply MUSIC Algorithm together with SS
+
+% 1. Construct S with samples.
+L = 8;
+S = zeros(Nr-L+1, Nr-L+1);
+S0 = eye(Nr-L+1); % S0 should be made prior to analyze eigenstructure.
+
+for l = 1:L 
+    S = S + X(l:Nr-L+l) * X(l:Nr-L+l)';
+end
+
+S = S ./ L;
+
+% 2. Calculate eigenstructure of S in metric of S_0.
+% Solve Sv = lambda S0 v by pre- and post-multiplying S_0^{-1/2}.
+% This is actually done by 'eig(A, B)' function, so no need to implement.
+[eigvecs, eigvals] = eig(S, S0, 'chol');
+
+% sort eigvecs and eigvals
+[eigvals, idx] = sort(diag(eigvals), 'descend');
+eigvecs = eigvecs(:, idx);
+eigval_min = min(eigvals);
+
+Ntheta = 256;
+dtheta = (AoA_max - AoA_min) / Ntheta;
+theta_cont = linspace(AoA_min, AoA_max - dtheta, Ntheta);
+theta_display = theta_cont * 180 / pi;
+array_cont = zeros(Nr-L+1, Ntheta);
+
+for i = 1:Ntheta
+    array_cont(:, i) = ULA(Nr-L+1, k, d, theta_cont(i));
+end 
+
+% 2-1. Estimate D = M - N
+% a problem to think: how to distinguish N? anyways...
+% Exploit the statistics of W. (We already assumed we know S0)
+
+% [idx, C] = kmeans(log(eigvals), 2);
+% [~, I] = min(C);
+% sum(idx == I)
+% D = Nr - sum(idx == I, 'all');
+
+% chi-square LR test
+eigvals'
+D = 1;
+eps = 1e-15;
+reject_level = 0.05;
+anomaly_flag = 0;
+
+while ~anomaly_flag
+    % LR ~ \chi^2 (Nsample(M-D))
+    df = Nsample*(Nr-D);
+    LR = Nsample / sigma^2 * sum(eigvals(D+1:end));
+
+    pvalue = chi2cdf(LR, df, 'upper');
+
+    if (pvalue > reject_level)
+        anomaly_flag = 1;
+        break;
+    end 
+    D = D + 1;
+end
+
+
+sprintf('estimated D = %d', D)
+
+noise_eigvecs = eigvecs(:, D+1:end);
+
+% 3. Evaluate P(theta)
+spectrum_ss = zeros(Ntheta, 1);
+
+for n = 1:Ntheta
+    vv = noise_eigvecs' * array_cont(:, n);
+    spectrum_ss(n) = 1 / (vv' * vv);
+end
+
+AoAs_deg = AoAs * 180 / pi;
+
+
+figure;
+plot(theta_display, 10*log10(spectrum), 'LineWidth', 1.25, 'Color', [0 0 0], ...
+    'DisplayName', 'MUSIC with plenty data');
+grid on;
+title(sprintf('Spectrum against AoA (Spatial Smoothing), $M = %d$, $D = %d$', Nr, D), 'Interpreter', 'latex', 'FontSize', 13);
+xlabel('Angle of Arrival (AoA) $\theta^\circ$', 'Interpreter', 'latex', ...
+    'FontSize', 13);
+ylabel('$P_{MU}(\theta)$ (dB)', 'Interpreter', 'latex', ...
+    'FontSize', 13);
+xlim([AoA_min * 180 / pi, AoA_max * 180 / pi]);
+ax = gca;
+ax.FontSize = 12;
+
+hold on;
+plot(theta_display, 10*log10(spectrum_def), 'LineWidth', 1.25, 'Color', 'r', ...
+    'DisplayName', 'MUSIC(1 sample)');
+
+hold on;
+plot(theta_display, 10*log10(spectrum_ss), 'LineWidth', 1.25, 'Color', 'b', ...
+    'DisplayName', 'MUSIC(1 sample), Spatial Smoothing');
+
+legend;
+lgd = legend; 
+lgd.FontName = 'Times New Roman';   
+lgd.FontSize = 13;   
+lgd.AutoUpdate = 'off';
+
+hold on;
+for degree = AoAs_deg'
+    xline(degree, '--r', sprintf('%.2f $^{\\circ}$', degree), 'Interpreter', 'latex', ...
+        'Fontsize', 13);
+    hold on;
+end 
 
 %% Helper Function.
 % array steering vector a(theta).
