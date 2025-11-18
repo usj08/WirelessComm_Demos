@@ -12,7 +12,7 @@
 - UE cooperative localization
 - matched filtering (**ambiguity function**, 2025.11.18 revised)
 - delay-doppler profile in MIMO-OFDM ISAC
-- Precoder optimization in MIMO-OFDM ISAC (My ongoing research project)
+- [Precoder optimization in MIMO-OFDM ISAC (My ongoing research project)]
 
 #### Reproduce Papers
 - Spatially Sparse Precoding in mmWave Channels
