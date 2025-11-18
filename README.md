@@ -9,7 +9,7 @@
 - More will be added.
 
 #### ISAC
-- matched filtering (**ambiguity function**)
+- matched filtering (**ambiguity function**, 2025.11.18 revised)
 - delay-doppler profile in MIMO-OFDM ISAC 
 
 #### Reproduce Papers
